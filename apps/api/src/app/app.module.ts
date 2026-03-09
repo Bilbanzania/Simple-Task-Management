@@ -26,7 +26,7 @@ import { UsersService } from './users/users.service';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         entities: [User, Organization, Task, AuditLog],
-        synchronize: true,
+        synchronize: false,
         logging: false,
         ssl: { rejectUnauthorized: false },
         entityPrefix: 'tha_',
