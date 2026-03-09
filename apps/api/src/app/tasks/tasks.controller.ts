@@ -16,7 +16,7 @@ interface AuthenticatedRequest extends Record<string, unknown> {
 @Controller('tasks')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) { }
 
   @Get('audit-log')
   @Roles(UserRole.OWNER, UserRole.ADMIN)
@@ -36,10 +36,10 @@ export class TasksController {
   @Post()
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   create(
-    @Request() req: AuthenticatedRequest, 
-    @Body() body: { title: string; description: string; category?: string }
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { title: string; description: string; category?: string; assigneeId?: string }
   ) {
-    return this.tasksService.create(req.user, body.title, body.description, body.category);
+    return this.tasksService.create(req.user, body.title, body.description, body.category, body.assigneeId);
   }
 
   @Get()
@@ -50,8 +50,8 @@ export class TasksController {
   @Patch(':id')
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   update(
-    @Request() req: AuthenticatedRequest, 
-    @Param('id') id: string, 
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
     @Body() body: Record<string, unknown>
   ) {
     return this.tasksService.update(id, req.user, body);

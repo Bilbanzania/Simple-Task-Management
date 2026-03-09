@@ -27,14 +27,19 @@ export class TasksService {
       resourceId,
       details,
       organizationId: user.organizationId,
-      actorId: user.userId, 
+      actorId: user.userId,
     });
 
     this.logger.log(`[AUDIT] ${action}: ${details} by ${user.email}`);
   }
 
-  async create(user: UserPayload, title: string, description: string, category = 'Work') {
+  async create(user: UserPayload, title: string, description: string, category = 'Work', assigneeId?: string) {
     const count = await this.taskRepo.count({ where: { organizationId: user.organizationId } });
+
+    let finalAssigneeId: string | null = user.userId;
+    if (assigneeId !== undefined) {
+      finalAssigneeId = assigneeId === '' ? null : assigneeId;
+    }
 
     const result = await this.taskRepo.insert({
       title,
@@ -42,7 +47,7 @@ export class TasksService {
       category,
       status: TaskStatus.TODO,
       organizationId: user.organizationId,
-      assigneeId: user.userId,
+      assigneeId: finalAssigneeId,
       position: count
     });
 
@@ -86,7 +91,7 @@ export class TasksService {
 
   async update(id: string, user: UserPayload, updates: Partial<Task>) {
     if (user.role === UserRole.VIEWER) throw new ForbiddenException();
-    await this.findOneSecure(id, user); 
+    await this.findOneSecure(id, user);
 
     await this.taskRepo.update({ id }, updates);
 
@@ -96,7 +101,7 @@ export class TasksService {
   }
 
   async remove(id: string, user: UserPayload) {
-    await this.findOneSecure(id, user); 
+    await this.findOneSecure(id, user);
     if (user.role !== UserRole.OWNER) throw new ForbiddenException();
 
     await this.taskRepo.delete({ id });

@@ -9,6 +9,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { TaskService } from '../core/task.service';
 import { AuthService } from '../core/auth.service';
+import { UsersService } from '../core/users.service';
 import { AppComponent } from '../app.component';
 import { UserRole, TaskStatus, ITask } from '@Simple Task Management/data';
 
@@ -28,15 +29,24 @@ export class TaskListComponent implements OnInit {
   TaskStatus = TaskStatus;
   taskService = inject(TaskService);
   auth = inject(AuthService);
+  usersService = inject(UsersService);
   app = inject(AppComponent);
 
   newTaskTitle = '';
   newTaskDescription = '';
   newTaskCategory = 'Work';
+  newTaskAssigneeId = '';
+
   isDarkMode = this.app.isDarkMode;
 
   showForm = signal(false);
   activeTaskForSheet = signal<ITask | null>(null);
+
+  editingTask = signal<ITask | null>(null);
+  editTitle = '';
+  editDescription = '';
+  editCategory = '';
+  editAssigneeId = '';
 
   readonly columns = [
     { label: 'To Do', status: TaskStatus.TODO, color: 'text-gray-400' },
@@ -76,17 +86,49 @@ export class TaskListComponent implements OnInit {
     if (kbEvent.target instanceof HTMLInputElement || kbEvent.target instanceof HTMLTextAreaElement) return;
     kbEvent.preventDefault();
     if (!this.showForm()) this.toggleForm();
-    setTimeout(() => document.querySelector<HTMLInputElement>('#taskInput')?.focus(), 100);
+    setTimeout(() => document.querySelector<HTMLInputElement>('#newTitle')?.focus(), 100);
   }
 
   ngOnInit() {
-    if (this.auth.currentUser()) this.taskService.loadTasks();
+    if (this.auth.currentUser()) {
+      this.taskService.loadTasks();
+      this.usersService.loadUsers();
+    }
   }
 
   toggleForm() { this.showForm.set(!this.showForm()); }
   openActionSheet(task: ITask) { this.activeTaskForSheet.set(task); }
   closeActionSheet() { this.activeTaskForSheet.set(null); }
   toggleDarkMode() { this.app.toggleTheme(); }
+
+  openEditModal(task: ITask) {
+    this.editingTask.set(task);
+    this.editTitle = task.title;
+    this.editDescription = task.description || '';
+    this.editCategory = task.category || 'Work';
+    this.editAssigneeId = task.assigneeId || task.assignee?.id || '';
+  }
+
+  closeEditModal() {
+    this.editingTask.set(null);
+  }
+
+  saveEdit() {
+    const task = this.editingTask();
+    if (!task || !this.editTitle.trim()) return;
+
+    const updates: Partial<ITask> = {
+      title: this.editTitle,
+      description: this.editDescription,
+      category: this.editCategory,
+      assigneeId: this.editAssigneeId || undefined,
+    };
+
+    this.taskService.update(task.id, updates).subscribe(() => {
+      this.closeEditModal();
+      this.taskService.loadTasks();
+    });
+  }
 
   moveTaskFromSheet(newStatus: TaskStatus) {
     const task = this.activeTaskForSheet();
@@ -96,7 +138,7 @@ export class TaskListComponent implements OnInit {
       t.id === task.id ? { ...t, status: newStatus } : t
     );
     this.taskService.tasks.set(updatedTasks);
-    this.taskService.update(task.id, newStatus).subscribe();
+    this.taskService.update(task.id, { status: newStatus }).subscribe();
     this.closeActionSheet();
   }
 
@@ -114,17 +156,19 @@ export class TaskListComponent implements OnInit {
         t.id === task.id ? { ...t, status: newStatus } : t
       );
       this.taskService.tasks.set(updatedTasks);
-      this.taskService.update(task.id, newStatus).subscribe();
+      this.taskService.update(task.id, { status: newStatus }).subscribe();
     }
   }
 
   create() {
     if (!this.newTaskTitle.trim()) return;
-    this.taskService.create(this.newTaskTitle, this.newTaskDescription, this.newTaskCategory).subscribe({
+
+    this.taskService.create(this.newTaskTitle, this.newTaskDescription, this.newTaskCategory, this.newTaskAssigneeId).subscribe({
       next: () => {
         this.newTaskTitle = '';
         this.newTaskDescription = '';
         this.newTaskCategory = 'Work';
+        this.newTaskAssigneeId = ''; 
         this.showForm.set(false);
       },
       error: (err) => console.error(err)

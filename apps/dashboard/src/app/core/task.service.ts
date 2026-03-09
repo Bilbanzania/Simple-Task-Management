@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ITask, TaskStatus } from '@Simple Task Management/data';
+import { ITask } from '@Simple Task Management/data';
 import { tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -48,18 +48,18 @@ export class TaskService {
     );
   }
 
-  create(title: string, description: string, category: string) {
-    return this.http.post<ITask>(this.apiUrl, { title, description, category }).pipe(
+  create(title: string, description: string, category: string, assigneeId?: string) {
+    return this.http.post<ITask>(this.apiUrl, { title, description, category, assigneeId }).pipe(
       tap(() => this.loadTasks())
     );
   }
 
-  update(id: string, status: TaskStatus) {
+  update(id: string, updates: Partial<ITask>) {
     this.tasks.update(currentTasks =>
-      currentTasks.map(t => t.id === id ? { ...t, status } : t)
+      currentTasks.map(t => t.id === id ? { ...t, ...updates } : t)
     );
 
-    return this.http.patch<ITask>(`${this.apiUrl}/${id}`, { status }).pipe(
+    return this.http.patch<ITask>(`${this.apiUrl}/${id}`, updates).pipe(
       catchError(err => {
         console.error('Update failed', err);
         this.loadTasks();

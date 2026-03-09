@@ -87,23 +87,98 @@
           class="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500">✕</button>
       </div>
       <div class="space-y-4">
-        <input name="newTaskTitle" [(ngModel)]="newTaskTitle" placeholder="What needs to be done?"
+        <input id="newTitle" name="newTaskTitle" [(ngModel)]="newTaskTitle" placeholder="What needs to be done?"
           class="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-medium" />
+
+        <textarea id="newDescription" name="newTaskDescription" [(ngModel)]="newTaskDescription"
+          placeholder="Task Description (optional)..." rows="2"
+          class="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+
         <div class="flex flex-col md:flex-row gap-4">
-          <select name="newTaskCategory" [(ngModel)]="newTaskCategory"
-            class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium outline-none">
-            <option value="Work">💼 Work</option>
-            <option value="Personal">🏠 Personal</option>
-            <option value="Urgent">🔥 Urgent</option>
-          </select>
-          <input name="newTaskDescription" [(ngModel)]="newTaskDescription" placeholder="Description (optional)"
-            class="flex-1 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none" />
+          <div class="flex-1">
+            <label for="newCategory"
+              class="block text-[10px] font-bold uppercase text-gray-500 mb-1 ml-1">Category</label>
+            <select id="newCategory" name="newTaskCategory" [(ngModel)]="newTaskCategory"
+              class="w-full p-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium outline-none">
+              <option value="Work">💼 Work</option>
+              <option value="Personal">🏠 Personal</option>
+              <option value="Urgent">🔥 Urgent</option>
+            </select>
+          </div>
+
+          <div class="flex-1">
+            <label for="newAssignee" class="block text-[10px] font-bold uppercase text-gray-500 mb-1 ml-1">Assign
+              To</label>
+            <select id="newAssignee" name="newTaskAssignee" [(ngModel)]="newTaskAssigneeId"
+              class="w-full p-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium outline-none">
+              <option value="">Unassigned</option>
+              @for (user of usersService.users(); track user.id) {
+              <option [value]="user.id">{{ user.email }} ({{ user.role }})</option>
+              }
+            </select>
+          </div>
         </div>
+
         <button type="submit"
           class="w-full mt-2 bg-blue-600 text-white py-4 rounded-xl font-bold tracking-wide shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all">Save
           Task</button>
       </div>
     </form>
+  </div>
+  }
+
+  @if (editingTask()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      class="w-full max-w-2xl bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg font-bold">Edit Task</h2>
+        <button type="button" (click)="closeEditModal()"
+          class="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <input name="editTitle" [(ngModel)]="editTitle" placeholder="Task Title"
+          class="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-medium" />
+
+        <textarea name="editDescription" [(ngModel)]="editDescription" placeholder="Task Description..." rows="3"
+          class="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <label for="editCategory"
+              class="block text-[10px] font-bold uppercase text-gray-500 mb-1 ml-1">Category</label>
+            <select id="editCategory" name="editCategory" [(ngModel)]="editCategory"
+              class="w-full p-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium outline-none">
+              <option value="Work">💼 Work</option>
+              <option value="Personal">🏠 Personal</option>
+              <option value="Urgent">🔥 Urgent</option>
+            </select>
+          </div>
+
+          <div class="flex-1">
+            <label for="editAssignee" class="block text-[10px] font-bold uppercase text-gray-500 mb-1 ml-1">Assign
+              To</label>
+            <select id="editAssignee" name="editAssignee" [(ngModel)]="editAssigneeId"
+              class="w-full p-3.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium outline-none">
+              <option value="">Unassigned</option>
+              @for (user of usersService.users(); track user.id) {
+              <option [value]="user.id">{{ user.email }} ({{ user.role }})</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <button type="button" (click)="closeEditModal()"
+            class="px-6 py-3 font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">Cancel</button>
+          <button type="button" (click)="saveEdit()"
+            class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold tracking-wide shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all">Save
+            Changes</button>
+        </div>
+      </div>
+    </div>
   </div>
   }
 
@@ -173,7 +248,7 @@
 
           @for (task of groupedTasks()[col.status]; track task.id) {
           <div cdkDrag [cdkDragData]="task"
-            class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow cursor-grab touch-manipulation">
+            class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow cursor-grab touch-manipulation group">
 
             <div class="flex justify-between items-start mb-2.5">
               <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider border"
@@ -187,19 +262,32 @@
                 {{ task.category || 'Work' }}
               </span>
 
-              @if (auth.currentUser()?.role === UserRole.OWNER) {
-              <button (click)="delete(task.id)"
-                class="hidden md:block text-gray-300 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400 transition-colors p-1"
-                title="Delete Task">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-              }
+              <div class="flex items-center gap-1">
+                @if (canEdit()) {
+                <button (click)="openEditModal(task)"
+                  class="opacity-100 md:opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 dark:text-gray-600 dark:hover:text-blue-400 transition-colors p-1"
+                  title="Edit Task">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+                }
+
+                @if (auth.currentUser()?.role === UserRole.OWNER) {
+                <button (click)="delete(task.id)"
+                  class="hidden md:block text-gray-300 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400 transition-colors p-1"
+                  title="Delete Task">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+                }
+              </div>
             </div>
 
-            <div>
+            <div (dblclick)="canEdit() && openEditModal(task)">
               <h3 class="font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1"
                 [class.line-through]="task.status === 'DONE'">{{ task.title }}</h3>
               @if (task.description) { <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2">{{
@@ -209,7 +297,8 @@
             @if (task.assignee) {
             <div class="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50 flex items-center gap-2">
               <div
-                class="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[8px] font-bold text-blue-700 dark:text-blue-300 border border-white dark:border-gray-700">
+                class="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[8px] font-bold text-blue-700 dark:text-blue-300 border border-white dark:border-gray-700"
+                title="{{ task.assignee.email }}">
                 {{ task.assignee.email.charAt(0).toUpperCase() }}</div>
               <span class="text-[10px] text-gray-500 font-medium truncate">{{ task.assignee.email.split('@')[0]
                 }}</span>
