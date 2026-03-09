@@ -65,6 +65,4 @@ Enterprise Task Management Workspace
     
 *   **Advanced Analytics:** A visual dashboard featuring burn-down charts and task completion velocity metrics.
     
-*   **Persisted Sorting:** Migrating the local UI drag-and-drop state to a persisted sortOrder linked list in the PostgreSQL database.
-    
 *   **Redis Caching:** Offloading RBAC and session validation to an in-memory datastore to improve query performance under high traffic.

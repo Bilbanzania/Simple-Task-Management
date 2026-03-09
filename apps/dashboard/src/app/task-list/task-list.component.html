@@ -1,198 +1,241 @@
 <div
-  class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4 md:p-8 transition-colors duration-300 font-sans">
+  class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4 md:p-8 transition-colors duration-300 font-sans flex flex-col">
 
-  <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-    <div class="flex items-center gap-6">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">Task Management</h1>
-        <div class="flex items-center gap-2 mt-1">
-          <span
-            class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-xs font-semibold rounded-md uppercase tracking-wider shadow-sm">
-            {{ auth.currentUser()?.organization?.name }}
-          </span>
-          <span class="text-gray-400">|</span>
-          <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Role: {{ auth.currentUser()?.role }}</span>
-        </div>
-      </div>
-
-      <div
-        class="flex items-center text-xs font-medium transition-all duration-300 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-100 dark:border-blue-800/30"
-        [class.opacity-100]="taskService.isSyncing()" [class.opacity-0]="!taskService.isSyncing()">
-        <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse mr-2"></span>
-        <span class="text-blue-600 dark:text-blue-400">Saving to Cloud...</span>
+  <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
+    <div class="flex flex-col">
+      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Task Management</h1>
+      <div class="flex items-center gap-2 mt-1">
+        <span
+          class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 text-[10px] font-bold rounded uppercase tracking-widest">
+          {{ auth.currentUser()?.organization?.name }}
+        </span>
+        <span class="text-gray-400 text-xs">|</span>
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Role: {{ auth.currentUser()?.role }}</span>
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      @if (auth.currentUser()?.role === UserRole.OWNER) {
-      <a routerLink="/team"
-        class="hidden md:block mr-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm transition-colors">
-        Manage Team
-      </a>
-      }
+    <div
+      class="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto border-t border-gray-200 dark:border-gray-800 md:border-0 pt-4 md:pt-0">
+      <div class="flex items-center gap-2">
+        @if (auth.currentUser()?.role === UserRole.OWNER) {
+        <a routerLink="/team"
+          class="flex items-center justify-center p-2 md:px-3 md:py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+          title="Manage Team">
+          <span class="md:hidden text-lg">👥</span>
+          <span class="hidden md:inline font-medium text-sm">Manage Team</span>
+        </a>
+        }
+        @if (auth.currentUser()?.role === UserRole.OWNER || auth.currentUser()?.role === UserRole.ADMIN) {
+        <a routerLink="/logs"
+          class="flex items-center justify-center p-2 md:px-3 md:py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+          title="Logs">
+          <span class="md:hidden text-lg">📜</span>
+          <span class="hidden md:inline font-medium text-sm">Logs</span>
+        </a>
+        }
+      </div>
 
-      @if (auth.currentUser()?.role === UserRole.OWNER || auth.currentUser()?.role === UserRole.ADMIN) {
-      <a routerLink="/logs"
-        class="hidden md:flex items-center gap-2 mr-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
-        <span>📜</span> Logs
-      </a>
-      }
-
-      <button (click)="toggleDarkMode()" type="button"
-        class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-gray-700">
-        {{ isDarkMode() ? '🌙' : '☀️' }}
-      </button>
-      <button (click)="logout()"
-        class="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm">
-        Sign Out
-      </button>
+      <div class="flex items-center gap-2">
+        <button (click)="toggleDarkMode()"
+          class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm transition-all active:scale-95">
+          {{ isDarkMode() ? '🌙' : '☀️' }}
+        </button>
+        <button (click)="logout()"
+          class="p-2 md:px-4 md:py-2 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm active:scale-95"
+          title="Sign Out">
+          <span class="md:hidden text-lg">🚪</span>
+          <span class="hidden md:inline text-sm font-medium">Sign Out</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <div class="mb-8 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-    <div class="flex justify-between text-xs mb-3 font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-      <span>Productivity</span>
-      <span class="text-blue-600 dark:text-blue-400">{{ completionRate() }}%</span>
+  <div class="flex flex-col md:flex-row gap-4 mb-6 shrink-0">
+    <div
+      class="flex-1 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+      <div
+        class="flex justify-between text-[10px] mb-2 font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+        <span>Productivity</span>
+        <span class="text-blue-600 dark:text-blue-400">{{ completionRate() }}%</span>
+      </div>
+      <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-500 to-green-400 h-full rounded-full transition-all duration-1000"
+          [style.width.%]="completionRate()"></div>
+      </div>
     </div>
-    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-      <div class="bg-gradient-to-r from-blue-500 to-green-400 h-full rounded-full transition-all duration-1000 ease-out"
-        [style.width.%]="completionRate()"></div>
-    </div>
+
+    @if (canEdit()) {
+    <button (click)="toggleForm()"
+      class="md:hidden w-full flex items-center justify-center gap-2 py-4 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all">
+      <span class="text-lg">➕</span> New Task
+    </button>
+    <button (click)="toggleForm()"
+      class="hidden md:flex items-center justify-center gap-2 px-8 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">
+      <span class="text-lg">➕</span> New Task
+    </button>
+    }
   </div>
 
-  @if (canEdit()) {
-  <form (ngSubmit)="create()"
-    class="bg-white dark:bg-gray-800 p-5 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8 flex flex-col gap-4">
-    <div class="flex flex-col md:flex-row gap-4">
-      <input id="taskInput" name="newTaskTitle" [(ngModel)]="newTaskTitle"
-        placeholder="What needs to be done? ('n' to focus)"
-        class="flex-1 p-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-all shadow-inner" />
-
-      <select name="newTaskCategory" [(ngModel)]="newTaskCategory"
-        class="p-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner md:w-48">
-        <option value="Work">💼 Work</option>
-        <option value="Personal">🏠 Personal</option>
-        <option value="Urgent">🔥 Urgent</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col md:flex-row gap-4">
-      <input name="newTaskDescription" [(ngModel)]="newTaskDescription"
-        placeholder="Add a short description (optional)..."
-        class="flex-1 p-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-all shadow-inner text-sm" />
-
-      <button type="submit"
-        class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-        <span>+</span> Add Task
-      </button>
-    </div>
-  </form>
+  @if (canEdit() && showForm()) {
+  <div
+    class="fixed inset-0 z-40 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <form (ngSubmit)="create()"
+      class="w-full md:max-w-2xl bg-white dark:bg-gray-800 p-6 rounded-t-3xl md:rounded-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg font-bold">Create New Task</h2>
+        <button type="button" (click)="toggleForm()"
+          class="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500">✕</button>
+      </div>
+      <div class="space-y-4">
+        <input name="newTaskTitle" [(ngModel)]="newTaskTitle" placeholder="What needs to be done?"
+          class="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-medium" />
+        <div class="flex flex-col md:flex-row gap-4">
+          <select name="newTaskCategory" [(ngModel)]="newTaskCategory"
+            class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium outline-none">
+            <option value="Work">💼 Work</option>
+            <option value="Personal">🏠 Personal</option>
+            <option value="Urgent">🔥 Urgent</option>
+          </select>
+          <input name="newTaskDescription" [(ngModel)]="newTaskDescription" placeholder="Description (optional)"
+            class="flex-1 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none" />
+        </div>
+        <button type="submit"
+          class="w-full mt-2 bg-blue-600 text-white py-4 rounded-xl font-bold tracking-wide shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all">Save
+          Task</button>
+      </div>
+    </form>
+  </div>
   }
 
-  <div class="space-y-3" cdkDropList (cdkDropListDropped)="drop($event)">
-    @for (task of taskService.tasks(); track task.id) {
-    <div cdkDrag
-      class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group active:cursor-grabbing cursor-grab">
+  @if (activeTaskForSheet()) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 md:hidden">
+    <div
+      class="w-full bg-white dark:bg-gray-800 p-6 rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 pb-10">
 
-      <div class="flex items-start sm:items-center gap-4 w-full min-w-0">
-        <div class="mt-1 sm:mt-0 text-gray-300 dark:text-gray-600 group-hover:text-gray-400 transition-colors shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-          </svg>
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <span
+            class="text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 mb-2 inline-block">
+            Move Task
+          </span>
+          <h3 class="font-bold text-lg leading-tight text-gray-900 dark:text-white">{{ activeTaskForSheet()?.title }}
+          </h3>
         </div>
-
-        <button (click)="toggleStatus(task)"
-          class="mt-0.5 sm:mt-0 h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300"
-          [class.border-gray-300]="task.status !== 'DONE'" [class.dark:border-gray-600]="task.status !== 'DONE'"
-          [class.bg-transparent]="task.status !== 'DONE'" [class.border-green-500]="task.status === 'DONE'"
-          [class.bg-green-500]="task.status === 'DONE'">
-          @if (task.status === 'DONE') {
-          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-          </svg>
-          }
-        </button>
-
-        <div class="flex flex-col min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-2.5 mb-0.5">
-            <h3
-              class="font-bold text-base text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate"
-              [class.line-through]="task.status === 'DONE'" [class.text-gray-400]="task.status === 'DONE'"
-              [class.dark:text-gray-500]="task.status === 'DONE'">
-              {{ task.title }}
-            </h3>
-
-            <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wider border"
-              [class.bg-blue-50]="(task['category'] || 'Work') === 'Work'"
-              [class.text-blue-600]="(task['category'] || 'Work') === 'Work'"
-              [class.border-blue-200]="(task['category'] || 'Work') === 'Work'"
-              [class.dark:bg-blue-900/30]="(task['category'] || 'Work') === 'Work'"
-              [class.dark:text-blue-400]="(task['category'] || 'Work') === 'Work'"
-              [class.dark:border-blue-800/50]="(task['category'] || 'Work') === 'Work'"
-              [class.bg-purple-50]="(task['category'] || 'Work') === 'Personal'"
-              [class.text-purple-600]="(task['category'] || 'Work') === 'Personal'"
-              [class.border-purple-200]="(task['category'] || 'Work') === 'Personal'"
-              [class.dark:bg-purple-900/30]="(task['category'] || 'Work') === 'Personal'"
-              [class.dark:text-purple-400]="(task['category'] || 'Work') === 'Personal'"
-              [class.dark:border-purple-800/50]="(task['category'] || 'Work') === 'Personal'"
-              [class.bg-red-50]="(task['category'] || 'Work') === 'Urgent'"
-              [class.text-red-600]="(task['category'] || 'Work') === 'Urgent'"
-              [class.border-red-200]="(task['category'] || 'Work') === 'Urgent'"
-              [class.dark:bg-red-900/30]="(task['category'] || 'Work') === 'Urgent'"
-              [class.dark:text-red-400]="(task['category'] || 'Work') === 'Urgent'"
-              [class.dark:border-red-800/50]="(task['category'] || 'Work') === 'Urgent'">
-              {{ task['category'] || 'Work' }}
-            </span>
-          </div>
-
-          @if (task['description']) {
-          <p class="text-sm text-gray-500 dark:text-gray-400 break-words text-wrap pr-4"
-            [class.line-through]="task.status === 'DONE'">
-            {{ task['description'] }}
-          </p>
-          }
-        </div>
+        <button (click)="closeActionSheet()"
+          class="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500 shrink-0">✕</button>
       </div>
 
-      <div class="flex items-center justify-between sm:justify-end gap-4 pl-12 sm:pl-0 shrink-0">
-
-        @if (task['assignee']) {
-        <div
-          class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/40 px-2 py-1 rounded-full border border-gray-100 dark:border-gray-700/50 shadow-sm">
-          <div
-            class="h-6 w-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center text-indigo-800 dark:text-indigo-200 text-[10px] font-bold uppercase border border-white dark:border-gray-700">
-            {{ task['assignee'].email.charAt(0) }}
-          </div>
-          <span class="text-xs font-medium text-gray-600 dark:text-gray-300 pr-1 max-w-[100px] truncate"
-            title="{{ task['assignee'].email }}">
-            {{ task['assignee'].email.split('@')[0] }}
-          </span>
-        </div>
+      <div class="space-y-3">
+        @for (col of columns; track col.status) {
+        @if (activeTaskForSheet()?.status !== col.status) {
+        <button (click)="moveTaskFromSheet(col.status)"
+          class="w-full p-4 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 rounded-xl font-bold text-left border border-gray-200 dark:border-gray-600 transition-colors flex justify-between items-center">
+          <span [class]="col.color">{{ col.label }}</span>
+          <span class="text-gray-400 text-lg">→</span>
+        </button>
+        }
         }
 
         @if (auth.currentUser()?.role === UserRole.OWNER) {
-        <button (click)="delete(task.id)"
-          class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-all p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
-          title="Delete Task">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
+        <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <button (click)="delete(activeTaskForSheet()!.id)"
+            class="w-full p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold text-left border border-red-100 dark:border-red-900/50">
+            Delete Task
+          </button>
+        </div>
         }
       </div>
+    </div>
+  </div>
+  }
 
-    </div>
-    } @empty {
-    <div
-      class="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 border-dashed">
-      <div class="h-16 w-16 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mb-4">
-        <span class="text-2xl">📝</span>
+  <div class="flex-1 overflow-hidden -mx-4 px-4 md:mx-0 md:px-0">
+    <div class="h-full flex gap-4 overflow-x-auto snap-x snap-mandatory pb-8 hide-scrollbar" cdkDropListGroup>
+
+      @for (col of columns; track col.status) {
+      <div
+        class="flex-none w-[85vw] md:w-[340px] snap-center flex flex-col h-full max-h-[calc(100vh-220px)] bg-gray-100/50 dark:bg-gray-800/30 rounded-2xl border border-gray-200/50 dark:border-gray-700/30">
+
+        <div
+          class="p-4 flex items-center justify-between shrink-0 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 rounded-t-2xl backdrop-blur-sm sticky top-0 z-10">
+          <div class="flex items-center gap-2">
+            <h2 class="text-[11px] font-black uppercase tracking-widest" [class]="col.color">{{ col.label }}</h2>
+            <span
+              class="bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded font-bold shadow-sm">
+              {{ groupedTasks()[col.status].length }}
+            </span>
+          </div>
+        </div>
+
+        <div [id]="col.status" cdkDropList [cdkDropListData]="groupedTasks()[col.status]"
+          (cdkDropListDropped)="drop($event)" class="flex-1 overflow-y-auto p-3 space-y-3">
+
+          @for (task of groupedTasks()[col.status]; track task.id) {
+          <div cdkDrag [cdkDragData]="task"
+            class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow cursor-grab touch-manipulation">
+
+            <div class="flex justify-between items-start mb-2.5">
+              <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider border"
+                [class.bg-blue-50]="(task.category || 'Work') === 'Work'"
+                [class.text-blue-600]="(task.category || 'Work') === 'Work'"
+                [class.border-blue-200]="(task.category || 'Work') === 'Work'"
+                [class.dark:bg-blue-900/30]="(task.category || 'Work') === 'Work'"
+                [class.dark:text-blue-400]="(task.category || 'Work') === 'Work'"
+                [class.bg-red-50]="task.category === 'Urgent'" [class.text-red-600]="task.category === 'Urgent'"
+                [class.border-red-200]="task.category === 'Urgent'">
+                {{ task.category || 'Work' }}
+              </span>
+
+              @if (auth.currentUser()?.role === UserRole.OWNER) {
+              <button (click)="delete(task.id)"
+                class="hidden md:block text-gray-300 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400 transition-colors p-1"
+                title="Delete Task">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              }
+            </div>
+
+            <div>
+              <h3 class="font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1"
+                [class.line-through]="task.status === 'DONE'">{{ task.title }}</h3>
+              @if (task.description) { <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2">{{
+                task.description }}</p> }
+            </div>
+
+            @if (task.assignee) {
+            <div class="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50 flex items-center gap-2">
+              <div
+                class="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[8px] font-bold text-blue-700 dark:text-blue-300 border border-white dark:border-gray-700">
+                {{ task.assignee.email.charAt(0).toUpperCase() }}</div>
+              <span class="text-[10px] text-gray-500 font-medium truncate">{{ task.assignee.email.split('@')[0]
+                }}</span>
+            </div>
+            }
+
+            <button (click)="openActionSheet(task)"
+              class="md:hidden w-full mt-4 py-2.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800/50 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Change Status
+            </button>
+
+          </div>
+          } @empty {
+          <div
+            class="h-24 flex items-center justify-center border-2 border-dashed border-gray-200/60 dark:border-gray-700/30 rounded-xl">
+            <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Drop Here</span>
+          </div>
+          }
+        </div>
       </div>
-      <p class="text-lg font-semibold text-gray-700 dark:text-gray-300">No tasks found</p>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Press 'n' to focus the input field and create one!</p>
+      }
     </div>
-    }
   </div>
 </div>

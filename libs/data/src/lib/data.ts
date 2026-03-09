@@ -25,7 +25,9 @@ export interface IUser {
 export enum TaskStatus {
   TODO = 'TODO',
   IN_PROGRESS = 'IN_PROGRESS',
+  IN_REVIEW = 'IN_REVIEW',
   DONE = 'DONE',
+  ARCHIVED = 'ARCHIVED',
 }
 
 export interface ITask {

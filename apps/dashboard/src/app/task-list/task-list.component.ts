@@ -1,8 +1,12 @@
-import { Component, inject, OnInit, computed, HostListener } from '@angular/core';
+import { Component, inject, OnInit, computed, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import {
+  DragDropModule,
+  CdkDragDrop,
+  moveItemInArray
+} from '@angular/cdk/drag-drop';
 import { TaskService } from '../core/task.service';
 import { AuthService } from '../core/auth.service';
 import { AppComponent } from '../app.component';
@@ -29,8 +33,30 @@ export class TaskListComponent implements OnInit {
   newTaskTitle = '';
   newTaskDescription = '';
   newTaskCategory = 'Work';
-
   isDarkMode = this.app.isDarkMode;
+
+  showForm = signal(false);
+  activeTaskForSheet = signal<ITask | null>(null);
+
+  readonly columns = [
+    { label: 'To Do', status: TaskStatus.TODO, color: 'text-gray-400' },
+    { label: 'In Progress', status: TaskStatus.IN_PROGRESS, color: 'text-blue-500' },
+    { label: 'In Review', status: TaskStatus.IN_REVIEW, color: 'text-purple-500' },
+    { label: 'Done', status: TaskStatus.DONE, color: 'text-green-500' },
+  ];
+
+  groupedTasks = computed<Record<TaskStatus, ITask[]>>(() => {
+    const tasks = this.taskService.tasks();
+    const initial = Object.values(TaskStatus).reduce((acc, status) => {
+      acc[status as TaskStatus] = [];
+      return acc;
+    }, {} as Record<TaskStatus, ITask[]>);
+
+    return tasks.reduce((acc, task) => {
+      if (acc[task.status]) acc[task.status].push(task);
+      return acc;
+    }, initial);
+  });
 
   canEdit = computed(() => {
     const role = this.auth.currentUser()?.role;
@@ -48,70 +74,70 @@ export class TaskListComponent implements OnInit {
   handleKeyDown(event: unknown) {
     const kbEvent = event as KeyboardEvent;
     if (kbEvent.target instanceof HTMLInputElement || kbEvent.target instanceof HTMLTextAreaElement) return;
-
     kbEvent.preventDefault();
-    document.querySelector<HTMLInputElement>('#taskInput')?.focus();
+    if (!this.showForm()) this.toggleForm();
+    setTimeout(() => document.querySelector<HTMLInputElement>('#taskInput')?.focus(), 100);
   }
 
   ngOnInit() {
-    if (this.auth.currentUser()) {
-      this.taskService.loadTasks();
-    }
+    if (this.auth.currentUser()) this.taskService.loadTasks();
+  }
+
+  toggleForm() { this.showForm.set(!this.showForm()); }
+  openActionSheet(task: ITask) { this.activeTaskForSheet.set(task); }
+  closeActionSheet() { this.activeTaskForSheet.set(null); }
+  toggleDarkMode() { this.app.toggleTheme(); }
+
+  moveTaskFromSheet(newStatus: TaskStatus) {
+    const task = this.activeTaskForSheet();
+    if (!task) return;
+
+    const updatedTasks = this.taskService.tasks().map(t =>
+      t.id === task.id ? { ...t, status: newStatus } : t
+    );
+    this.taskService.tasks.set(updatedTasks);
+    this.taskService.update(task.id, newStatus).subscribe();
+    this.closeActionSheet();
   }
 
   drop(event: CdkDragDrop<ITask[]>) {
-    const tasksArray = [...this.taskService.tasks()];
-
-    moveItemInArray(tasksArray, event.previousIndex, event.currentIndex);
-
-    this.taskService.tasks.set(tasksArray);
-
-    const orderedIds = tasksArray.map(task => task.id);
-
-    this.taskService.reorder(orderedIds).subscribe({
-      next: () => {
-        console.log('Task order persisted successfully! ✨');
-      },
-      error: (err) => {
-        console.error('Failed to save task order:', err);
-      }
-    });
-  }
-
-  toggleDarkMode() {
-    this.app.toggleTheme();
+    if (event.previousContainer === event.container) {
+      const tasksArray = [...this.taskService.tasks()];
+      moveItemInArray(tasksArray, event.previousIndex, event.currentIndex);
+      this.taskService.tasks.set(tasksArray);
+      const orderedIds = tasksArray.map(task => task.id);
+      this.taskService.reorder(orderedIds).subscribe();
+    } else {
+      const task = event.item.data as ITask;
+      const newStatus = event.container.id as TaskStatus;
+      const updatedTasks = this.taskService.tasks().map(t =>
+        t.id === task.id ? { ...t, status: newStatus } : t
+      );
+      this.taskService.tasks.set(updatedTasks);
+      this.taskService.update(task.id, newStatus).subscribe();
+    }
   }
 
   create() {
     if (!this.newTaskTitle.trim()) return;
-
     this.taskService.create(this.newTaskTitle, this.newTaskDescription, this.newTaskCategory).subscribe({
       next: () => {
         this.newTaskTitle = '';
         this.newTaskDescription = '';
         this.newTaskCategory = 'Work';
+        this.showForm.set(false);
       },
       error: (err) => console.error(err)
     });
   }
 
-  toggleStatus(task: ITask) {
-    const newStatus = task.status === TaskStatus.DONE
-      ? TaskStatus.TODO
-      : TaskStatus.DONE;
-
-    this.taskService.update(task.id, newStatus).subscribe();
-  }
-
   delete(id: string) {
     if (this.auth.currentUser()?.role !== UserRole.OWNER) return;
-
     if (confirm('Are you sure you want to delete this task?')) {
       this.taskService.delete(id).subscribe();
+      this.closeActionSheet();
     }
   }
 
-  logout() {
-    this.auth.logout();
-  }
+  logout() { this.auth.logout(); }
 }
