@@ -1,0 +1,11 @@
+{
+  "name": "@m-laypath-d1d6a9fd-5947-4ad5-8a4d-9cc9f65cb54c/data",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}

@@ -1,0 +1,70 @@
+<button (click)="toggleTheme()" type="button"
+  class="fixed top-6 right-6 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:scale-110 transition-all z-50 text-xl"
+  title="Toggle Light/Dark Mode">
+  {{ isDarkMode() ? '🌙' : '☀️' }}
+</button>
+
+<div
+  class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-500 p-4">
+
+  <div
+    class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 dark:border-gray-700 transition-all">
+
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+        {{ isRegistering() ? 'Register Corp' : 'Welcome Back' }}
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        {{ isRegistering() ? 'Set up your organization dashboard' : 'Access your secure task management portal' }}
+      </p>
+    </div>
+
+    <form (ngSubmit)="submit()" class="space-y-5">
+      <div>
+        <label for="emailInput"
+          class="block text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 ml-1">Email
+          Address</label>
+        <input [(ngModel)]="email" id="emailInput" name="email" type="email" placeholder="name@company.com"
+          class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+      </div>
+
+      <div>
+        <label for="passwordInput"
+          class="block text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 ml-1">Password</label>
+        <input [(ngModel)]="password" id="passwordInput" name="password" type="password" placeholder="••••••••"
+          class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+      </div>
+
+      @if (isRegistering()) {
+      <div class="animate-in fade-in slide-in-from-top-2 duration-300">
+        <label for="orgInput"
+          class="block text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 ml-1">Organization
+          Name</label>
+        <input [(ngModel)]="orgName" id="orgInput" name="orgName" placeholder="Acme Corp"
+          class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+      </div>
+      }
+
+      <button type="submit" [disabled]="!turnstileToken || !email || !password || (isRegistering() && !orgName)"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ isRegistering() ? 'Create Organization Account' : 'Sign In' }}
+      </button>
+
+      <div class="turnstile-wrapper">
+        <ngx-turnstile [siteKey]="'0x4AAAAAACno0wmzWl-kd_7k'" (resolved)="onCaptchaResolved($event)">
+        </ngx-turnstile>
+      </div>
+
+      <button (click)="toggleMode()" type="button"
+        class="w-full text-center text-sm font-medium text-blue-500 dark:text-blue-400 cursor-pointer hover:underline decoration-2 underline-offset-4 transition-all bg-transparent border-none">
+        {{ isRegistering() ? 'Already have an account? Login' : 'Need a new corporate account? Register' }}
+      </button>
+    </form>
+
+    <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
+      <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+        Secure Multi-Tenant Environment
+      </p>
+    </div>
+  </div>
+</div>

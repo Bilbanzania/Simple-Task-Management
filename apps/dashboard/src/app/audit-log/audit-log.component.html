@@ -1,0 +1,118 @@
+<div
+    class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4 md:p-8 transition-colors duration-300 font-sans">
+
+    <header class="flex justify-between items-start md:items-center mb-8 flex-col md:flex-row gap-4">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Audit Logs</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Security and activity tracking for your organization.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button (click)="toggleDarkMode()" type="button"
+                class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-gray-700">
+                {{ isDarkMode() ? '🌙' : '☀️' }}
+            </button>
+
+            <a routerLink="/tasks"
+                class="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                <span>&larr;</span> Back to Dashboard
+            </a>
+        </div>
+    </header>
+
+    @if (isLoading()) {
+    <div class="flex justify-center py-20">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    </div>
+    } @else {
+    <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead
+                    class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 uppercase text-xs font-semibold tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4">Timestamp</th>
+                        <th class="px-6 py-4">Action</th>
+                        <th class="px-6 py-4">User</th>
+                        <th class="px-6 py-4">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @for (log of logs(); track log.id) {
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/25 transition-colors">
+
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-medium">
+                            {{ log.createdAt | timeAgo }}
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded-full tracking-wider"
+                                [class.bg-green-100]="log.action === 'CREATE_TASK' || log.action === 'CREATE_USER'"
+                                [class.text-green-700]="log.action === 'CREATE_TASK' || log.action === 'CREATE_USER'"
+                                [class.dark:bg-green-900/30]="log.action === 'CREATE_TASK' || log.action === 'CREATE_USER'"
+                                [class.dark:text-green-400]="log.action === 'CREATE_TASK' || log.action === 'CREATE_USER'"
+                                [class.bg-orange-100]="log.action === 'UPDATE_TASK'"
+                                [class.text-orange-700]="log.action === 'UPDATE_TASK'"
+                                [class.dark:bg-orange-900/30]="log.action === 'UPDATE_TASK'"
+                                [class.dark:text-orange-400]="log.action === 'UPDATE_TASK'"
+                                [class.bg-red-100]="log.action === 'DELETE_TASK' || log.action === 'DELETE_USER'"
+                                [class.text-red-700]="log.action === 'DELETE_TASK' || log.action === 'DELETE_USER'"
+                                [class.dark:bg-red-900/30]="log.action === 'DELETE_TASK' || log.action === 'DELETE_USER'"
+                                [class.dark:text-red-400]="log.action === 'DELETE_TASK' || log.action === 'DELETE_USER'"
+                                [class.bg-blue-100]="log.action === 'REORDER_TASKS'"
+                                [class.text-blue-700]="log.action === 'REORDER_TASKS'"
+                                [class.dark:bg-blue-900/30]="log.action === 'REORDER_TASKS'"
+                                [class.dark:text-blue-400]="log.action === 'REORDER_TASKS'">
+                                {{ log.action }}
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if (log.actor) {
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wider shadow-sm"
+                                    [class.bg-purple-100]="log.actor.role === 'OWNER'"
+                                    [class.text-purple-700]="log.actor.role === 'OWNER'"
+                                    [class.dark:bg-purple-900/60]="log.actor.role === 'OWNER'"
+                                    [class.dark:text-purple-300]="log.actor.role === 'OWNER'"
+                                    [class.bg-blue-100]="log.actor.role === 'ADMIN'"
+                                    [class.text-blue-700]="log.actor.role === 'ADMIN'"
+                                    [class.dark:bg-blue-900/60]="log.actor.role === 'ADMIN'"
+                                    [class.dark:text-blue-300]="log.actor.role === 'ADMIN'"
+                                    [class.bg-gray-100]="log.actor.role === 'VIEWER'"
+                                    [class.text-gray-700]="log.actor.role === 'VIEWER'"
+                                    [class.dark:bg-gray-700]="log.actor.role === 'VIEWER'"
+                                    [class.dark:text-gray-300]="log.actor.role === 'VIEWER'">
+                                    {{ log.actor.role }}
+                                </span>
+                                <span class="font-medium text-gray-900 dark:text-gray-200">
+                                    {{ log.actor.email }}
+                                </span>
+                            </div>
+                            } @else {
+                            <span class="text-gray-400 dark:text-gray-500 italic text-sm font-medium">Unknown
+                                User</span>
+                            }
+                        </td>
+
+                        <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                            {{ log.details }}
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            No audit logs found.
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+</div>
