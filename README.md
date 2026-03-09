@@ -1,122 +1,70 @@
-This project is a Secure Task Management System designed to handle multi-tenant data isolation and role-based access control (RBAC). It is built as an NX monorepo to ensure tight integration between the NestJS backend and the Angular frontend.
+Enterprise Task Management Workspace
+====================================
 
-Technical Stack
----------------
+**Overview:** A production-ready, multi-tenant task management system built to demonstrate enterprise software patterns. It features strict data isolation, dynamic Role-Based Access Control (RBAC), and immutable audit logging within a tightly integrated Nx monorepo.
 
-*   **Monorepo Management:** NX
-    
-*   **Backend:** NestJS, TypeORM, Passport.js (JWT)
-    
-*   **Frontend:** Angular (Signals, Tailwind CSS, CDK)
-    
-*   **Database:** SQLite
-    
-*   **Shared Library:** TypeScript interfaces and enums for cross-stack type safety.
-    
+**Core Features:**
 
-Setup Instructions
-------------------
-
-### Environment Configuration
-
-The application uses a default configuration for local development. For a production environment, create a .env file in the apps/api directory with the following variables:
-
-*   JWT\_SECRET: A secure string for token signing.
+*   **Secure Multi-Tenancy:** Every database query is strictly scoped to the user's organizationId derived from their JWT, ensuring absolute data isolation between different companies.
     
-*   DATABASE\_PATH: Path to the SQLite database file.
+*   **Dynamic RBAC & Team Provisioning:** Three distinct access tiers (Owner, Admin, Viewer). Owners can directly provision new accounts and assign roles instantly.
+    
+*   **Immutable Audit Trail:** A dedicated, color-coded logging system that records every mutation (Create, Update, Delete, Reorder), attributing actions to specific users and timestamps.
+    
+*   **Reactive Frontend:** Built with Angular Signals for pristine, glitch-free state management.
+    
+*   **Tactile UI/UX:** Features Angular CDK Drag-and-Drop task reordering, system-wide light/dark mode persistence, and responsive Tailwind CSS layouts.
     
 
-### Installation
+**Technology Stack:**
 
-Open a PowerShell terminal in the project root and install all project dependencies:
-
-PowerShell
-
-`   npm install   `
-
-### Execution
-
-Run the API and the Dashboard in separate PowerShell instances or VS Code terminal tabs.
-
-**Backend (API):**
-
-PowerShell
-
-`   npx nx serve api --no-tui   `
-
-The API is configured to run on http://localhost:3001/api.
-
-**Frontend (Dashboard):**
-
-PowerShell
-
-`   npx nx serve dashboard --no-tui   `
-
-The Dashboard is available at http://localhost:4200.
-
-Architecture Overview
----------------------
-
-### Modular Design
-
-The NX workspace is divided into specialized modules:
-
-*   **apps/api:** The core server handling authentication, authorization, and task persistence.
+*   **Frontend (Client):** Angular (Standalone Components, Signals), Tailwind CSS, Angular CDK.
     
-*   **apps/dashboard:** A reactive frontend that leverages Angular Signals for state management and instant UI updates.
+*   **Backend (API):** NestJS, Passport.js (Custom JWT Strategies), TypeORM.
     
-*   **libs/data:** A shared library containing global constants, enums (e.g., UserRole, TaskStatus), and interfaces (e.g., ITask, IUser).
+*   **Infrastructure & Data:** PostgreSQL, Nx Monorepo (Shared TypeScript interfaces/enums).
     
 
-### Multi-Tenancy and Security
+**Getting Started:**
 
-The system enforces strict multi-tenancy. Every request is verified via a JWT strategy. The user's organizationId is extracted from the token and used to scope all database queries, ensuring that data is never leaked between organizations.
-
-Data Model and RBAC
--------------------
-
-### Entity Relationships
-
-The database schema consists of:
-
-*   **Organizations:** Supports a hierarchical structure.
+*   **Prerequisites:** Node.js (v18 or higher) and PostgreSQL (running locally or via a cloud provider).
     
-*   **Users:** Each user is assigned a specific role and linked to an organization.
+*   **1\. Environment Setup:** Navigate to the apps/api directory, create a .env file, and add your credentials:
     
-*   **Tasks:** Primary resources scoped to an organization.
+    *   JWT\_SECRET=super\_secret\_development\_string
+        
+    *   DATABASE\_URL=postgres://username:password@localhost:5432/task\_management\_db
+        
+*   **2\. Installation:** Run npm install from the project root to install all monorepo dependencies.
     
-*   **Audit Logs:** Records all mutations (Create, Update, Delete) to maintain a secure history.
+*   **3\. Execution:** Run npx nx serve dashboard from the root directory to seamlessly spin up the environment.
     
+    *   Frontend Dashboard runs at http://localhost:4200
+        
+    *   Backend API runs at http://localhost:3001/api
+        
 
-### Permission Matrix
+**Architecture & Security Highlights:**
 
-**ActionOwnerAdminViewerCreate Task**AllowedAllowedDenied**Edit Task**AllowedAllowedDenied**Delete Task**AllowedDeniedDenied**View Audit Logs**AllowedAllowedDenied
-
-Implementation Details
-----------------------
-
-### Audit Logging
-
-The audit logging system uses a write-only approach. To prevent side-effect issues during entity state management, the system uses TypeORM’s .insert() method. This ensures that logs are created as immutable records without attempting to update associated user or organization entities.
-
-### UI/UX Enhancements
-
-*   **Form Submission:** Forms are configured to submit on the "Enter" key for both login and task creation.
+*   **The Multi-Tenant Guard:** The backend extracts the organizationId from authenticated JWTs and injects it into all TypeORM queries. This prevents unauthorized access even if an attacker guesses a valid taskId from another organization.
     
-*   **Drag-and-Drop:** The Angular CDK is used to allow users to reorder tasks locally for better organization.
+*   **Role-Based Access Matrix:** Route guards and UI visibility are strictly enforced:
     
-*   **Dark Mode:** A theme toggle is implemented to support both light and dark environments.
+    *   _Owners:_ Can Create/Edit, Delete, Reorder, Manage Team Members, and View Audit Logs.
+        
+    *   _Admins:_ Can Create/Edit, Reorder, and View Audit Logs.
+        
+    *   _Viewers:_ Strictly read-only access.
+        
+*   **Append-Only Audit Logging:** Utilizes TypeORM's .insert() method rather than .save() to guarantee that log entries are strictly append-only, preventing accidental mutations to relational entities.
     
 
-Trade-offs and Future Considerations
-------------------------------------
+**Future Roadmap:**
 
-### Current Trade-offs
-* **Testing Coverage:** Priority was given to the implementation of the security infrastructure and core RBAC logic over comprehensive unit testing. 
-* **State Persistence for Reordering:** Task reordering via drag-and-drop is handled in the local UI state and does not yet persist a custom sortOrder to the database.
-
-### Future Improvements
-* **User Management UI:** Currently, users are seeded via a backend script. A production iteration would include a "Team" module allowing Owners to invite users and manage role assignments directly through the interface, leveraging the existing RBAC guards.
-* **Refresh Token Rotation:** To enhance session security and reduce the impact of token theft.
-* **Organization Hierarchy Inheritance:** Expanding guards to allow parent-level owners to view and manage tasks in sub-departments.
-* **RBAC Caching:** Integrating Redis to cache role permissions for improved performance under high loads.
+*   **Real-Time WebSockets:** Integrating @nestjs/websockets and socket.io to instantly broadcast drag-and-drop movements and task updates to connected organization members.
+    
+*   **Advanced Analytics:** A visual dashboard featuring burn-down charts and task completion velocity metrics.
+    
+*   **Persisted Sorting:** Migrating the local UI drag-and-drop state to a persisted sortOrder linked list in the PostgreSQL database.
+    
+*   **Redis Caching:** Offloading RBAC and session validation to an in-memory datastore to improve query performance under high traffic.
