@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ITask } from '@Simple Task Management/data';
+import { ITask, ISubtask } from '@Simple Task Management/data'; 
 import { tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -48,8 +48,8 @@ export class TaskService {
     );
   }
 
-  create(title: string, description: string, category: string, assigneeId?: string) {
-    return this.http.post<ITask>(this.apiUrl, { title, description, category, assigneeId }).pipe(
+  create(title: string, description: string, category: string, assigneeId?: string, dueDate?: Date | null, subtasks: ISubtask[] = []) {
+    return this.http.post<ITask>(this.apiUrl, { title, description, category, assigneeId, dueDate, subtasks }).pipe(
       tap(() => this.loadTasks())
     );
   }

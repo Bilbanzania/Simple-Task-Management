@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from '../database/entities/task.entity';
 import { AuditLog } from '../database/entities/audit-log.entity';
-import { UserRole, TaskStatus } from '@Simple Task Management/data';
+import { UserRole, TaskStatus, ISubtask } from '@Simple Task Management/data';
 
 interface UserPayload {
   userId: string;
@@ -33,7 +33,7 @@ export class TasksService {
     this.logger.log(`[AUDIT] ${action}: ${details} by ${user.email}`);
   }
 
-  async create(user: UserPayload, title: string, description: string, category = 'Work', assigneeId?: string) {
+  async create(user: UserPayload, title: string, description: string, category = 'Work', assigneeId?: string, dueDate?: Date, subtasks: ISubtask[] = []) {
     const count = await this.taskRepo.count({ where: { organizationId: user.organizationId } });
 
     let finalAssigneeId: string | null = user.userId;
@@ -48,7 +48,9 @@ export class TasksService {
       status: TaskStatus.TODO,
       organizationId: user.organizationId,
       assigneeId: finalAssigneeId,
-      position: count
+      position: count,
+      dueDate,   
+      subtasks   
     });
 
     const newTaskId = result.identifiers[0].id;

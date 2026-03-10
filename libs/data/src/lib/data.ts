@@ -30,6 +30,12 @@ export enum TaskStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export interface ISubtask {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+}
+
 export interface ITask {
   id: string;
   title: string;
@@ -39,6 +45,8 @@ export interface ITask {
   assigneeId?: string;
   assignee?: IUser;
   organizationId: string;
+  dueDate?: Date;        
+  subtasks?: ISubtask[];  
   createdAt: Date;
   updatedAt: Date;
 }

@@ -11,7 +11,7 @@ import { TaskService } from '../core/task.service';
 import { AuthService } from '../core/auth.service';
 import { UsersService } from '../core/users.service';
 import { AppComponent } from '../app.component';
-import { UserRole, TaskStatus, ITask } from '@Simple Task Management/data';
+import { UserRole, TaskStatus, ITask, ISubtask } from '@Simple Task Management/data';
 
 @Component({
   selector: 'app-task-list',
@@ -36,6 +36,9 @@ export class TaskListComponent implements OnInit {
   newTaskDescription = '';
   newTaskCategory = 'Work';
   newTaskAssigneeId = '';
+  newTaskDueDate: string | null = null;
+  newTaskSubtasks: ISubtask[] = [];
+  newSubtaskTitle = '';
 
   isDarkMode = this.app.isDarkMode;
 
@@ -47,12 +50,15 @@ export class TaskListComponent implements OnInit {
   editDescription = '';
   editCategory = '';
   editAssigneeId = '';
+  editDueDate: string | null = null;
+  editSubtasks: ISubtask[] = [];
+  editNewSubtaskTitle = '';
 
   readonly columns = [
-    { label: 'To Do', status: TaskStatus.TODO, color: 'text-gray-400' },
-    { label: 'In Progress', status: TaskStatus.IN_PROGRESS, color: 'text-blue-500' },
-    { label: 'In Review', status: TaskStatus.IN_REVIEW, color: 'text-purple-500' },
-    { label: 'Done', status: TaskStatus.DONE, color: 'text-green-500' },
+    { label: 'To Do', status: TaskStatus.TODO, color: 'text-slate-400' },
+    { label: 'In Progress', status: TaskStatus.IN_PROGRESS, color: 'text-cyan-500' },
+    { label: 'In Review', status: TaskStatus.IN_REVIEW, color: 'text-violet-500' },
+    { label: 'Done', status: TaskStatus.DONE, color: 'text-teal-400' },
   ];
 
   groupedTasks = computed<Record<TaskStatus, ITask[]>>(() => {
@@ -101,12 +107,40 @@ export class TaskListComponent implements OnInit {
   closeActionSheet() { this.activeTaskForSheet.set(null); }
   toggleDarkMode() { this.app.toggleTheme(); }
 
+  addSubtaskToNewTask() {
+    if (this.newSubtaskTitle.trim()) {
+      this.newTaskSubtasks.push({ id: crypto.randomUUID(), title: this.newSubtaskTitle.trim(), isCompleted: false });
+      this.newSubtaskTitle = '';
+    }
+  }
+  removeNewSubtask(index: number) { this.newTaskSubtasks.splice(index, 1); }
+
+  addSubtaskToEdit() {
+    if (this.editNewSubtaskTitle.trim()) {
+      this.editSubtasks.push({ id: crypto.randomUUID(), title: this.editNewSubtaskTitle.trim(), isCompleted: false });
+      this.editNewSubtaskTitle = '';
+    }
+  }
+  removeEditSubtask(index: number) { this.editSubtasks.splice(index, 1); }
+
+  toggleSubtaskCompletion(task: ITask, subtaskId: string) {
+    if (!this.canEdit()) return;
+    const updatedSubtasks = task.subtasks?.map(st => st.id === subtaskId ? { ...st, isCompleted: !st.isCompleted } : st) || [];
+    this.taskService.update(task.id, { subtasks: updatedSubtasks }).subscribe(() => this.taskService.loadTasks());
+  }
+
+  getCompletedSubtasksCount(task: ITask): number {
+    return task.subtasks?.filter(s => s.isCompleted).length || 0;
+  }
+
   openEditModal(task: ITask) {
     this.editingTask.set(task);
     this.editTitle = task.title;
     this.editDescription = task.description || '';
     this.editCategory = task.category || 'Work';
     this.editAssigneeId = task.assigneeId || task.assignee?.id || '';
+    this.editDueDate = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null; 
+    this.editSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : []; 
   }
 
   closeEditModal() {
@@ -122,6 +156,8 @@ export class TaskListComponent implements OnInit {
       description: this.editDescription,
       category: this.editCategory,
       assigneeId: this.editAssigneeId || undefined,
+      dueDate: this.editDueDate ? new Date(this.editDueDate) : undefined,
+      subtasks: this.editSubtasks
     };
 
     this.taskService.update(task.id, updates).subscribe(() => {
@@ -163,12 +199,16 @@ export class TaskListComponent implements OnInit {
   create() {
     if (!this.newTaskTitle.trim()) return;
 
-    this.taskService.create(this.newTaskTitle, this.newTaskDescription, this.newTaskCategory, this.newTaskAssigneeId).subscribe({
+    const dueDateObj = this.newTaskDueDate ? new Date(this.newTaskDueDate) : null;
+
+    this.taskService.create(this.newTaskTitle, this.newTaskDescription, this.newTaskCategory, this.newTaskAssigneeId, dueDateObj, this.newTaskSubtasks).subscribe({
       next: () => {
         this.newTaskTitle = '';
         this.newTaskDescription = '';
         this.newTaskCategory = 'Work';
         this.newTaskAssigneeId = ''; 
+        this.newTaskDueDate = null;
+        this.newTaskSubtasks = [];
         this.showForm.set(false);
       },
       error: (err) => console.error(err)

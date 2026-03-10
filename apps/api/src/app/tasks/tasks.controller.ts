@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request }
 import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
 import { RolesGuard, Roles } from '@Simple Task Management/auth';
-import { UserRole } from '@Simple Task Management/data';
+import { UserRole, ISubtask } from '@Simple Task Management/data';
 
 interface AuthenticatedRequest extends Record<string, unknown> {
   user: {
@@ -37,9 +37,9 @@ export class TasksController {
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   create(
     @Request() req: AuthenticatedRequest,
-    @Body() body: { title: string; description: string; category?: string; assigneeId?: string }
+    @Body() body: { title: string; description: string; category?: string; assigneeId?: string; dueDate?: Date; subtasks?: ISubtask[] }
   ) {
-    return this.tasksService.create(req.user, body.title, body.description, body.category, body.assigneeId);
+    return this.tasksService.create(req.user, body.title, body.description, body.category, body.assigneeId, body.dueDate, body.subtasks);
   }
 
   @Get()

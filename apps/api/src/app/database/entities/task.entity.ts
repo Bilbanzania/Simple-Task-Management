@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { ITask, TaskStatus } from '@Simple Task Management/data';
+import { ITask, TaskStatus, ISubtask } from '@Simple Task Management/data';
 import { Organization } from './organization.entity';
 import { User } from './user.entity';
 
@@ -26,6 +26,12 @@ export class Task implements ITask {
 
   @Column({ default: 0 })
   position: number;
+
+  @Column({ type: 'date', nullable: true })
+  dueDate: Date;
+
+  @Column({ type: 'simple-json', nullable: true, default: [] })
+  subtasks: ISubtask[];
 
   @ManyToOne(() => Organization, (org) => org.tasks, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'organizationId' })
