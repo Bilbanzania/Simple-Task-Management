@@ -30,6 +30,16 @@ export enum TaskStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export interface IComment {
+  id: string;
+  content: string;
+  taskId: string;
+  authorId: string;
+  author?: IUser;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface ISubtask {
   id: string;
   title: string;
@@ -45,8 +55,9 @@ export interface ITask {
   assigneeId?: string;
   assignee?: IUser;
   organizationId: string;
-  dueDate?: Date;        
-  subtasks?: ISubtask[];  
+  dueDate?: Date;           
+  subtasks?: ISubtask[];    
+  comments?: IComment[];
   createdAt: Date;
   updatedAt: Date;
 }

@@ -12,6 +12,7 @@ import { Task } from './database/entities/task.entity';
 import { AuditLog } from './database/entities/audit-log.entity';
 import { UsersController } from './users/users.controller';
 import { UsersService } from './users/users.service';
+import { Comment } from './database/entities/comment.entity';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { UsersService } from './users/users.service';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [User, Organization, Task, AuditLog],
+        entities: [User, Organization, Task, AuditLog, Comment],
         synchronize: false,
         logging: false,
         ssl: { rejectUnauthorized: false },
@@ -36,7 +37,7 @@ import { UsersService } from './users/users.service';
       ttl: 60000,
       limit: 100,
     }]),
-    TypeOrmModule.forFeature([User, AuditLog]), 
+    TypeOrmModule.forFeature([User, AuditLog]),
     AuthModule,
     TasksModule,
   ],
@@ -49,4 +50,4 @@ import { UsersService } from './users/users.service';
     UsersService
   ],
 })
-export class AppModule {}
+export class AppModule { }

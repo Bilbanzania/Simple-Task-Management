@@ -163,11 +163,11 @@
   <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
     <div
-      class="w-full max-w-2xl bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+      class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-lg font-bold text-slate-900 dark:text-white">Edit Task</h2>
         <button type="button" (click)="closeEditModal()"
-          class="h-8 w-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">✕</button>
+          class="h-8 w-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">✕</button>
       </div>
 
       <div class="space-y-4">
@@ -230,6 +230,48 @@
               <button type="button" (click)="removeEditSubtask(i)"
                 class="text-rose-400 hover:text-rose-600 p-1 transition-colors">✕</button>
             </div>
+            }
+          </div>
+        </div>
+
+        <div class="pt-4 mt-6 border-t border-slate-100 dark:border-slate-800">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">Activity &
+            Comments</h3>
+
+          <div class="flex gap-3 mb-6">
+            <div
+              class="h-8 w-8 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center text-[10px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0 border border-slate-200 dark:border-slate-800">
+              {{ auth.currentUser()?.email?.charAt(0)?.toUpperCase() }}
+            </div>
+            <div class="flex-1 flex gap-2">
+              <input [(ngModel)]="newCommentText" name="newComment"
+                (keydown.enter)="$event.preventDefault(); submitComment()"
+                placeholder="Ask a question or post an update..."
+                class="flex-1 p-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800 dark:text-slate-200" />
+              <button type="button" (click)="submitComment()" [disabled]="!newCommentText.trim()"
+                class="px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50">Post</button>
+            </div>
+          </div>
+
+          <div class="space-y-4 max-h-48 overflow-y-auto pr-2">
+            @for (comment of activeComments(); track comment.id) {
+            <div class="flex gap-3 animate-in fade-in slide-in-from-top-2">
+              <div
+                class="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400 shrink-0 border border-slate-200 dark:border-slate-700">
+                {{ comment.author?.email?.charAt(0)?.toUpperCase() || '?' }}
+              </div>
+              <div
+                class="flex-1 bg-slate-50 dark:bg-slate-950/30 p-3 rounded-b-xl rounded-tr-xl border border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ (comment.author?.email ||
+                    'Unknown').split('@')[0] }}</span>
+                  <span class="text-[10px] text-slate-400">{{ comment.createdAt | timeAgo }}</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{{ comment.content }}</p>
+              </div>
+            </div>
+            } @empty {
+            <div class="text-center py-4 text-sm text-slate-400 italic">No comments yet. Start the conversation!</div>
             }
           </div>
         </div>
@@ -329,6 +371,17 @@
               </span>
 
               <div class="flex items-center gap-1">
+                <button (click)="openViewModal(task)"
+                  class="opacity-100 md:opacity-0 group-hover:opacity-100 text-slate-400 hover:text-cyan-500 dark:text-slate-500 dark:hover:text-cyan-400 transition-colors p-1"
+                  title="View Task Details">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+
                 @if (canEdit()) {
                 <button (click)="openEditModal(task)"
                   class="opacity-100 md:opacity-0 group-hover:opacity-100 text-slate-400 hover:text-cyan-500 dark:text-slate-500 dark:hover:text-cyan-400 transition-colors p-1"
@@ -353,7 +406,7 @@
               </div>
             </div>
 
-            <div (dblclick)="canEdit() && openEditModal(task)">
+            <div (dblclick)="canEdit() ? openEditModal(task) : openViewModal(task)">
               <h3 class="font-bold text-sm text-slate-900 dark:text-white leading-tight mb-1"
                 [class.line-through]="task.status === 'DONE'">{{ task.title }}</h3>
               @if (task.description) { <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{{
@@ -425,4 +478,154 @@
       }
     </div>
   </div>
+
+  @if (viewingTask()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border"
+              [class.bg-cyan-50]="(viewingTask()?.category || 'Work') === 'Work'"
+              [class.text-cyan-600]="(viewingTask()?.category || 'Work') === 'Work'"
+              [class.border-cyan-200]="(viewingTask()?.category || 'Work') === 'Work'"
+              [class.dark:bg-cyan-900/30]="(viewingTask()?.category || 'Work') === 'Work'"
+              [class.dark:text-cyan-400]="(viewingTask()?.category || 'Work') === 'Work'"
+              [class.bg-rose-50]="viewingTask()?.category === 'Urgent'"
+              [class.text-rose-600]="viewingTask()?.category === 'Urgent'"
+              [class.border-rose-200]="viewingTask()?.category === 'Urgent'"
+              [class.dark:bg-rose-900/30]="viewingTask()?.category === 'Urgent'"
+              [class.dark:text-rose-400]="viewingTask()?.category === 'Urgent'">
+              {{ viewingTask()?.category || 'Work' }}
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              {{ viewingTask()?.status }}
+            </span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{{ viewingTask()?.title }}</h2>
+        </div>
+        <button type="button" (click)="closeViewModal()"
+          class="h-8 w-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">✕</button>
+      </div>
+
+      <div class="space-y-8">
+        @if (viewingTask()?.description) {
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Description
+          </h3>
+          <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{{
+            viewingTask()?.description }}</p>
+        </div>
+        }
+
+        <div
+          class="grid grid-cols-2 gap-4 p-5 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div>
+            <span
+              class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1.5">Assignee</span>
+            <div class="flex items-center gap-2">
+              @if (viewingTask()?.assignee) {
+              <div
+                class="h-6 w-6 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center text-[10px] font-bold text-cyan-700 dark:text-cyan-300">
+                {{ viewingTask()?.assignee?.email?.charAt(0)?.toUpperCase() }}
+              </div>
+              <span class="text-sm font-medium text-slate-900 dark:text-white">{{ (viewingTask()?.assignee?.email ||
+                'Unknown').split('@')[0] }}</span>
+              } @else {
+              <span class="text-sm font-medium text-slate-500 dark:text-slate-400 italic">Unassigned</span>
+              }
+            </div>
+          </div>
+          <div>
+            <span class="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1.5">Due
+              Date</span>
+            @if (viewingTask()?.dueDate) {
+            <div class="flex items-center gap-1.5 text-sm font-medium text-rose-600 dark:text-rose-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ viewingTask()?.dueDate | date:'longDate' }}
+            </div>
+            } @else {
+            <span class="text-sm font-medium text-slate-500 dark:text-slate-400 italic">No deadline set</span>
+            }
+          </div>
+        </div>
+
+        @if (viewingTask()?.subtasks?.length) {
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Subtasks ({{
+            getCompletedSubtasksCount(viewingTask()!) }}/{{ viewingTask()?.subtasks?.length }})</h3>
+          <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-4">
+            <div class="bg-gradient-to-r from-cyan-400 to-violet-400 h-1.5 rounded-full transition-all"
+              [style.width.%]="(getCompletedSubtasksCount(viewingTask()!) * 100) / (viewingTask()?.subtasks?.length || 1)">
+            </div>
+          </div>
+          <div class="space-y-2">
+            @for (subtask of viewingTask()?.subtasks; track subtask.id) {
+            <label
+              class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/30 rounded-xl border border-slate-100 dark:border-slate-800 group"
+              [class.cursor-pointer]="canEdit()">
+              <input type="checkbox" [checked]="subtask.isCompleted"
+                (change)="toggleSubtaskCompletion(viewingTask()!, subtask.id)" [disabled]="!canEdit()"
+                class="rounded border-slate-300 text-cyan-500 shadow-sm focus:border-cyan-400 focus:ring focus:ring-cyan-400/50 dark:bg-slate-900 dark:border-slate-700 w-4 h-4" />
+              <span class="text-sm text-slate-700 dark:text-slate-300 transition-colors"
+                [class.line-through]="subtask.isCompleted" [class.opacity-50]="subtask.isCompleted">{{ subtask.title
+                }}</span>
+            </label>
+            }
+          </div>
+        </div>
+        }
+
+        <div class="pt-6 mt-8 border-t border-slate-100 dark:border-slate-800">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-5">Activity &
+            Comments</h3>
+
+          <div class="flex gap-3 mb-6">
+            <div
+              class="h-8 w-8 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center text-[10px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0 border border-slate-200 dark:border-slate-800">
+              {{ auth.currentUser()?.email?.charAt(0)?.toUpperCase() }}
+            </div>
+            <div class="flex-1 flex gap-2">
+              <input [(ngModel)]="newCommentText" name="newComment"
+                (keydown.enter)="$event.preventDefault(); submitComment()"
+                placeholder="Ask a question or post an update..."
+                class="flex-1 p-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800 dark:text-slate-200" />
+              <button type="button" (click)="submitComment()" [disabled]="!newCommentText.trim()"
+                class="px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50">Post</button>
+            </div>
+          </div>
+
+          <div class="space-y-4 max-h-64 overflow-y-auto pr-2">
+            @for (comment of activeComments(); track comment.id) {
+            <div class="flex gap-3 animate-in fade-in slide-in-from-top-2">
+              <div
+                class="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400 shrink-0 border border-slate-200 dark:border-slate-700">
+                {{ comment.author?.email?.charAt(0)?.toUpperCase() || '?' }}
+              </div>
+              <div
+                class="flex-1 bg-slate-50 dark:bg-slate-950/30 p-3.5 rounded-b-xl rounded-tr-xl border border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between items-start mb-1.5">
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ (comment.author?.email ||
+                    'Unknown').split('@')[0] }}</span>
+                  <span class="text-[10px] font-medium text-slate-400">{{ comment.createdAt | timeAgo }}</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{{
+                  comment.content }}</p>
+              </div>
+            </div>
+            } @empty {
+            <div class="text-center py-6 text-sm text-slate-400 italic">No comments yet. Start the conversation!</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
 </div>

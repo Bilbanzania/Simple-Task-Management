@@ -3,6 +3,7 @@ import { UserRole } from '@Simple Task Management/data';
 import { Task } from './task.entity';
 import { AuditLog } from './audit-log.entity';
 import { Organization } from './organization.entity';
+import { Comment } from './comment.entity';
 
 @Entity()
 export class User {
@@ -32,8 +33,10 @@ export class User {
   @OneToMany(() => Task, (task) => task.assignee)
   tasks: Task[];
 
+  @OneToMany(() => Comment, (comment) => comment.author)
+  comments: Comment[];
+
   @OneToMany(() => AuditLog, (log) => log.actor)
-  auditLogs: AuditLog[];
 
   @CreateDateColumn()
   createdAt: Date;

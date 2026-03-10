@@ -1,17 +1,14 @@
-import { Component, inject, OnInit, computed, HostListener, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, computed, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import {
-  DragDropModule,
-  CdkDragDrop,
-  moveItemInArray
-} from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TaskService } from '../core/task.service';
 import { AuthService } from '../core/auth.service';
 import { UsersService } from '../core/users.service';
 import { AppComponent } from '../app.component';
-import { UserRole, TaskStatus, ITask, ISubtask } from '@Simple Task Management/data';
+import { UserRole, TaskStatus, ITask, ISubtask, IComment } from '@Simple Task Management/data';
+import { TimeAgoPipe } from '../core/time-ago.pipe';
 
 @Component({
   selector: 'app-task-list',
@@ -20,11 +17,12 @@ import { UserRole, TaskStatus, ITask, ISubtask } from '@Simple Task Management/d
     CommonModule,
     FormsModule,
     DragDropModule,
-    RouterModule
+    RouterModule,
+    TimeAgoPipe
   ],
   templateUrl: './task-list.component.html',
 })
-export class TaskListComponent implements OnInit {
+export class TaskListComponent implements OnInit, OnDestroy {
   UserRole = UserRole;
   TaskStatus = TaskStatus;
   taskService = inject(TaskService);
@@ -53,6 +51,11 @@ export class TaskListComponent implements OnInit {
   editDueDate: string | null = null;
   editSubtasks: ISubtask[] = [];
   editNewSubtaskTitle = '';
+
+  viewingTask = signal<ITask | null>(null);
+
+  activeComments = signal<IComment[]>([]);
+  newCommentText = '';
 
   readonly columns = [
     { label: 'To Do', status: TaskStatus.TODO, color: 'text-slate-400' },
@@ -96,10 +99,26 @@ export class TaskListComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.auth.currentUser()) {
+    const user = this.auth.currentUser();
+    if (user) {
       this.taskService.loadTasks();
       this.usersService.loadUsers();
+
+      this.taskService.initSocket(user.organizationId);
+
+      this.taskService.commentAdded$.subscribe(({ taskId, comment }) => {
+        if (this.editingTask()?.id === taskId || this.viewingTask()?.id === taskId) {
+          this.activeComments.update(comments => {
+            if (!comments.find(c => c.id === comment.id)) return [comment, ...comments];
+            return comments;
+          });
+        }
+      });
     }
+  }
+
+  ngOnDestroy() {
+    this.taskService.disconnectSocket();
   }
 
   toggleForm() { this.showForm.set(!this.showForm()); }
@@ -126,11 +145,21 @@ export class TaskListComponent implements OnInit {
   toggleSubtaskCompletion(task: ITask, subtaskId: string) {
     if (!this.canEdit()) return;
     const updatedSubtasks = task.subtasks?.map(st => st.id === subtaskId ? { ...st, isCompleted: !st.isCompleted } : st) || [];
-    this.taskService.update(task.id, { subtasks: updatedSubtasks }).subscribe(() => this.taskService.loadTasks());
+    this.taskService.update(task.id, { subtasks: updatedSubtasks }).subscribe();
   }
 
   getCompletedSubtasksCount(task: ITask): number {
     return task.subtasks?.filter(s => s.isCompleted).length || 0;
+  }
+
+  openViewModal(task: ITask) {
+    this.viewingTask.set(task);
+    this.activeComments.set([]);
+    this.taskService.getComments(task.id).subscribe(comments => this.activeComments.set(comments));
+  }
+
+  closeViewModal() {
+    this.viewingTask.set(null);
   }
 
   openEditModal(task: ITask) {
@@ -139,12 +168,28 @@ export class TaskListComponent implements OnInit {
     this.editDescription = task.description || '';
     this.editCategory = task.category || 'Work';
     this.editAssigneeId = task.assigneeId || task.assignee?.id || '';
-    this.editDueDate = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null; 
-    this.editSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : []; 
+    this.editDueDate = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null;
+    this.editSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : [];
+
+    this.activeComments.set([]);
+    this.taskService.getComments(task.id).subscribe(comments => this.activeComments.set(comments));
   }
 
   closeEditModal() {
     this.editingTask.set(null);
+  }
+
+  submitComment() {
+    const task = this.editingTask() || this.viewingTask();
+    if (!task || !this.newCommentText.trim()) return;
+
+    this.taskService.addComment(task.id, this.newCommentText).subscribe(comment => {
+      this.activeComments.update(comments => {
+        if (!comments.find(c => c.id === comment.id)) return [comment, ...comments];
+        return comments;
+      });
+      this.newCommentText = '';
+    });
   }
 
   saveEdit() {
@@ -162,18 +207,12 @@ export class TaskListComponent implements OnInit {
 
     this.taskService.update(task.id, updates).subscribe(() => {
       this.closeEditModal();
-      this.taskService.loadTasks();
     });
   }
 
   moveTaskFromSheet(newStatus: TaskStatus) {
     const task = this.activeTaskForSheet();
     if (!task) return;
-
-    const updatedTasks = this.taskService.tasks().map(t =>
-      t.id === task.id ? { ...t, status: newStatus } : t
-    );
-    this.taskService.tasks.set(updatedTasks);
     this.taskService.update(task.id, { status: newStatus }).subscribe();
     this.closeActionSheet();
   }
@@ -188,9 +227,7 @@ export class TaskListComponent implements OnInit {
     } else {
       const task = event.item.data as ITask;
       const newStatus = event.container.id as TaskStatus;
-      const updatedTasks = this.taskService.tasks().map(t =>
-        t.id === task.id ? { ...t, status: newStatus } : t
-      );
+      const updatedTasks = this.taskService.tasks().map(t => t.id === task.id ? { ...t, status: newStatus } : t);
       this.taskService.tasks.set(updatedTasks);
       this.taskService.update(task.id, { status: newStatus }).subscribe();
     }
@@ -198,7 +235,6 @@ export class TaskListComponent implements OnInit {
 
   create() {
     if (!this.newTaskTitle.trim()) return;
-
     const dueDateObj = this.newTaskDueDate ? new Date(this.newTaskDueDate) : null;
 
     this.taskService.create(this.newTaskTitle, this.newTaskDescription, this.newTaskCategory, this.newTaskAssigneeId, dueDateObj, this.newTaskSubtasks).subscribe({
@@ -206,7 +242,7 @@ export class TaskListComponent implements OnInit {
         this.newTaskTitle = '';
         this.newTaskDescription = '';
         this.newTaskCategory = 'Work';
-        this.newTaskAssigneeId = ''; 
+        this.newTaskAssigneeId = '';
         this.newTaskDueDate = null;
         this.newTaskSubtasks = [];
         this.showForm.set(false);

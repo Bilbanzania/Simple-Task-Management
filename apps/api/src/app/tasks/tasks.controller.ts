@@ -62,4 +62,18 @@ export class TasksController {
   remove(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.tasksService.remove(id, req.user);
   }
+
+  @Get(':id/comments')
+  getComments(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.tasksService.getComments(id, req.user);
+  }
+
+  @Post(':id/comments')
+  addComment(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body('content') content: string
+  ) {
+    return this.tasksService.addComment(id, req.user, content);
+  }
 }
