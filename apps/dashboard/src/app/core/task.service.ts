@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ITask, ISubtask, IComment } from '@Simple Task Management/data';
+import { ITask, ISubtask, IComment, IOnlineUser } from '@Simple Task Management/data';
 import { tap, catchError } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
@@ -23,36 +23,41 @@ export class TaskService {
   private apiUrl = '/api/tasks';
 
   tasks = signal<ITask[]>([]);
+  onlineUsers = signal<IOnlineUser[]>([]); // 🟢 NEW Signal
   isSyncing = signal<boolean>(false);
 
   private socket?: Socket;
-  public commentAdded$ = new Subject<{ taskId: string, comment: IComment }>();
+  public commentAdded$ = new Subject<{taskId: string, comment: IComment}>();
 
-  initSocket(orgId: string) {
+  initSocket(orgId: string, user: IOnlineUser) {
     if (this.socket) return;
     this.socket = io({ transports: ['websocket', 'polling'] });
-
+    
     this.socket.on('connect', () => {
-      this.socket?.emit('joinOrganization', orgId);
+      this.socket?.emit('joinOrganization', { orgId, user });
+    });
+
+    this.socket.on('presenceUpdate', (users: IOnlineUser[]) => {
+      this.zone.run(() => this.onlineUsers.set(users));
     });
 
     this.socket.on('taskCreated', (task: ITask) => {
       this.zone.run(() => this.tasks.update(t => [...t, task]));
     });
-
+    
     this.socket.on('taskUpdated', (task: ITask) => {
       this.zone.run(() => this.tasks.update(t => t.map(existing => existing.id === task.id ? task : existing)));
     });
-
+    
     this.socket.on('taskDeleted', (taskId: string) => {
       this.zone.run(() => this.tasks.update(t => t.filter(existing => existing.id !== taskId)));
     });
-
+    
     this.socket.on('tasksReordered', () => {
       this.zone.run(() => this.loadTasks());
     });
-
-    this.socket.on('commentAdded', (payload: { taskId: string, comment: IComment }) => {
+    
+    this.socket.on('commentAdded', (payload: {taskId: string, comment: IComment}) => {
       this.zone.run(() => this.commentAdded$.next(payload));
     });
   }

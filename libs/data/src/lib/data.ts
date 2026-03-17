@@ -4,6 +4,11 @@ export enum UserRole {
   VIEWER = 'VIEWER',
 }
 
+export interface IOnlineUser {
+  id: string;
+  email: string;
+}
+
 export interface IOrganization {
   id: string;
   name: string;

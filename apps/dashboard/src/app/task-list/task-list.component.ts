@@ -103,9 +103,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
     if (user) {
       this.taskService.loadTasks();
       this.usersService.loadUsers();
-
-      this.taskService.initSocket(user.organizationId);
-
+      
+      this.taskService.initSocket(user.organizationId, { id: user.id, email: user.email });
+      
       this.taskService.commentAdded$.subscribe(({ taskId, comment }) => {
         if (this.editingTask()?.id === taskId || this.viewingTask()?.id === taskId) {
           this.activeComments.update(comments => {
@@ -168,10 +168,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.editDescription = task.description || '';
     this.editCategory = task.category || 'Work';
     this.editAssigneeId = task.assigneeId || task.assignee?.id || '';
-    this.editDueDate = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null;
-    this.editSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : [];
+    this.editDueDate = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null; 
+    this.editSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : []; 
 
-    this.activeComments.set([]);
+    this.activeComments.set([]); 
     this.taskService.getComments(task.id).subscribe(comments => this.activeComments.set(comments));
   }
 
@@ -242,7 +242,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
         this.newTaskTitle = '';
         this.newTaskDescription = '';
         this.newTaskCategory = 'Work';
-        this.newTaskAssigneeId = '';
+        this.newTaskAssigneeId = ''; 
         this.newTaskDueDate = null;
         this.newTaskSubtasks = [];
         this.showForm.set(false);
