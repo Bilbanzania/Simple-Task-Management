@@ -10,10 +10,11 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@Simple Task Management/data": ["libs/data/src/index.ts"],
       "@Simple Task Management/auth": ["libs/auth/src/index.ts"]
